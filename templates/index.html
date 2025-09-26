@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Accessibility and SEO meta tags -->
+    <meta name="description" content="AI-powered assistant for blind and visually impaired users">
+    <meta name="keywords" content="AI, accessibility, blind, visually impaired, text-to-speech, voice commands">
+    
+    <!-- Bootstrap CSS for responsive design -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom styles for accessibility -->
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-size: 18px;
+            line-height: 1.6;
+            background-color: var(--light-color);
+        }
+        
+        .high-contrast {
+            background-color: black !important;
+            color: yellow !important;
+        }
+        
+        .high-contrast .btn {
+            background-color: yellow !important;
+            color: black !important;
+            border: 2px solid white !important;
+        }
+        
+        .large-text {
+            font-size: 24px !important;
+        }
+        
+        .very-large-text {
+            font-size: 32px !important;
+        }
+        
+        .focus-visible {
+            outline: 3px solid var(--primary-color) !important;
+            outline-offset: 2px !important;
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        .speaking-indicator {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .listening-indicator {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        button, input, textarea, select {
+            font-size: inherit;
+            padding: 12px 16px;
+            margin: 8px 0;
+        }
+        
+        .btn-lg {
+            padding: 16px 32px;
+            font-size: 20px;
+        }
+        
+        .form-control {
+            font-size: 18px;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Skip to main content link for screen readers -->
+        <a href="#main-content" class="sr-only sr-only-focusable btn btn-primary">Skip to main content</a>
+        
+        <!-- Header with accessibility controls -->
+        <header class="row bg-primary text-white p-3 mb-4">
+            <div class="col-md-8">
+                <h1 class="h2">{{ title }}</h1>
+                <p class="lead">Accessible AI Assistant</p>
+            </div>
+            <div class="col-md-4">
+                <div class="accessibility-controls">
+                    <h2 class="h5">Accessibility Options</h2>
+                    <div class="btn-group-vertical" role="group" aria-label="Accessibility controls">
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="toggleHighContrast()" aria-describedby="contrast-help">
+                            Toggle High Contrast
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="increaseFontSize()" aria-describedby="font-help">
+                            Increase Font Size
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="decreaseFontSize()" aria-describedby="font-help">
+                            Decrease Font Size
+                        </button>
+                    </div>
+                    <div id="contrast-help" class="sr-only">Toggle between normal and high contrast mode for better visibility</div>
+                    <div id="font-help" class="sr-only">Adjust text size for better readability</div>
+                </div>
+            </div>
+        </header>
+        
+        <main id="main-content" class="row">
+            <!-- Status indicators -->
+            <div class="col-12 mb-3">
+                <div id="status-indicator" class="alert alert-info" role="status" aria-live="polite" aria-atomic="true">
+                    Ready to assist you
+                </div>
+            </div>
+            
+            <!-- Text Input Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4">Text Communication</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="text-form">
+                            <div class="mb-3">
+                                <label for="text-input" class="form-label">Enter your message or question:</label>
+                                <textarea 
+                                    id="text-input" 
+                                    name="text" 
+                                    class="form-control" 
+                                    rows="4" 
+                                    placeholder="Type your message here..."
+                                    aria-describedby="text-help"
+                                    required></textarea>
+                                <div id="text-help" class="form-text">
+                                    You can ask questions, request image descriptions, or have conversations.
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Send Message
+                                <span class="sr-only">(Will be spoken aloud)</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Voice Input Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4">Voice Communication</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>Click the button below to start voice command mode:</p>
+                        <button 
+                            id="voice-button" 
+                            class="btn btn-success btn-lg"
+                            aria-describedby="voice-help">
+                            🎤 Start Voice Command
+                        </button>
+                        <div id="voice-help" class="form-text mt-2">
+                            Click to activate voice recognition. Speak clearly after the beep.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Image Upload Section -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4">Image Description</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="image-form" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="image-input" class="form-label">Upload an image for description:</label>
+                                <input 
+                                    type="file" 
+                                    id="image-input" 
+                                    name="file" 
+                                    class="form-control"
+                                    accept="image/*"
+                                    aria-describedby="image-help"
+                                    required>
+                                <div id="image-help" class="form-text">
+                                    Supported formats: JPEG, PNG, GIF, BMP, TIFF, WEBP. I'll describe what I see in the image.
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-info btn-lg">
+                                📷 Describe Image
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Response Area -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4">AI Response</h2>
+                    </div>
+                    <div class="card-body">
+                        <div 
+                            id="response-area" 
+                            class="p-3 bg-light border rounded"
+                            role="region" 
+                            aria-live="polite" 
+                            aria-label="AI Assistant Response">
+                            Responses will appear here and be spoken aloud.
+                        </div>
+                        <div class="mt-3">
+                            <button id="repeat-button" class="btn btn-outline-secondary" disabled>
+                                🔊 Repeat Last Response
+                            </button>
+                            <button id="stop-speaking-button" class="btn btn-outline-danger" disabled>
+                                🔇 Stop Speaking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Session History -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0">Conversation History</h2>
+                        <button id="clear-history-button" class="btn btn-outline-warning btn-sm">
+                            Clear History
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div 
+                            id="history-area" 
+                            class="history-container"
+                            role="log" 
+                            aria-label="Conversation History"
+                            style="max-height: 400px; overflow-y: auto;">
+                            <p class="text-muted">Conversation history will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="row mt-5 py-4 bg-dark text-white">
+            <div class="col-12 text-center">
+                <p>&copy; 2024 AI Agent for Blind Users. Designed for accessibility and independence.</p>
+                <p>
+                    <a href="#" class="text-white me-3">Keyboard Shortcuts</a>
+                    <a href="#" class="text-white me-3">Accessibility Features</a>
+                    <a href="#" class="text-white">Help & Support</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        let currentFontSize = 18;
+        let isHighContrast = false;
+        let isListening = false;
+        let lastResponse = "";
+        
+        // Accessibility functions
+        function toggleHighContrast() {
+            isHighContrast = !isHighContrast;
+            document.body.classList.toggle('high-contrast', isHighContrast);
+            updateStatus(isHighContrast ? "High contrast mode enabled" : "Normal contrast mode enabled");
+        }
+        
+        function increaseFontSize() {
+            currentFontSize += 2;
+            if (currentFontSize > 36) currentFontSize = 36;
+            document.body.style.fontSize = currentFontSize + 'px';
+            updateStatus(`Font size increased to ${currentFontSize}px`);
+        }
+        
+        function decreaseFontSize() {
+            currentFontSize -= 2;
+            if (currentFontSize < 14) currentFontSize = 14;
+            document.body.style.fontSize = currentFontSize + 'px';
+            updateStatus(`Font size decreased to ${currentFontSize}px`);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status-indicator');
+            statusElement.textContent = message;
+            statusElement.className = `alert alert-${type}`;
+            
+            // Speak status updates
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function speakText(text) {
+            if ('speechSynthesis' in window && text) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.onstart = () => {
+                    document.getElementById('stop-speaking-button').disabled = false;
+                };
+                utterance.onend = () => {
+                    document.getElementById('stop-speaking-button').disabled = true;
+                };
+                speechSynthesis.speak(utterance);
+                lastResponse = text;
+                document.getElementById('repeat-button').disabled = false;
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Text form handler
+            document.getElementById('text-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const textInput = document.getElementById('text-input');
+                const text = textInput.value.trim();
+                
+                if (!text) return;
+                
+                updateStatus("Processing your message...", "warning");
+                
+                try {
+                    const response = await fetch('/process_text', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `text=${encodeURIComponent(text)}`
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('response-area').textContent = data.response;
+                        speakText(data.response);
+                        updateStatus("Response received", "success");
+                        addToHistory("You", text);
+                        addToHistory("AI", data.response);
+                        textInput.value = '';
+                    } else {
+                        updateStatus("Error processing message", "danger");
+                    }
+                } catch (error) {
+                    updateStatus("Network error occurred", "danger");
+                }
+            });
+            
+            // Voice button handler
+            document.getElementById('voice-button').addEventListener('click', async function() {
+                if (isListening) return;
+                
+                isListening = true;
+                this.textContent = "🎤 Listening...";
+                this.disabled = true;
+                updateStatus("Listening for voice command...", "warning");
+                
+                try {
+                    const response = await fetch('/voice_command', {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.response) {
+                        document.getElementById('response-area').textContent = data.response;
+                        speakText(data.response);
+                        updateStatus("Voice command processed", "success");
+                        addToHistory("Voice", "Voice command");
+                        addToHistory("AI", data.response);
+                    } else {
+                        updateStatus("No speech detected", "info");
+                    }
+                } catch (error) {
+                    updateStatus("Voice processing error", "danger");
+                } finally {
+                    isListening = false;
+                    this.textContent = "🎤 Start Voice Command";
+                    this.disabled = false;
+                }
+            });
+            
+            // Image form handler
+            document.getElementById('image-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('image-input');
+                const file = fileInput.files[0];
+                
+                if (!file) return;
+                
+                updateStatus("Analyzing image...", "warning");
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    const response = await fetch('/analyze_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('response-area').textContent = data.description;
+                        speakText(data.description);
+                        updateStatus("Image analysis complete", "success");
+                        addToHistory("Image", file.name);
+                        addToHistory("AI", data.description);
+                        fileInput.value = '';
+                    } else {
+                        updateStatus("Error analyzing image", "danger");
+                    }
+                } catch (error) {
+                    updateStatus("Network error occurred", "danger");
+                }
+            });
+            
+            // Repeat button handler
+            document.getElementById('repeat-button').addEventListener('click', function() {
+                if (lastResponse) {
+                    speakText(lastResponse);
+                }
+            });
+            
+            // Stop speaking button handler
+            document.getElementById('stop-speaking-button').addEventListener('click', function() {
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                    this.disabled = true;
+                }
+            });
+            
+            // Clear history button handler
+            document.getElementById('clear-history-button').addEventListener('click', async function() {
+                try {
+                    await fetch('/clear_history', { method: 'POST' });
+                    document.getElementById('history-area').innerHTML = '<p class="text-muted">Conversation history cleared.</p>';
+                    updateStatus("History cleared", "info");
+                } catch (error) {
+                    updateStatus("Error clearing history", "danger");
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            document.getElementById('text-input').focus();
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            document.getElementById('voice-button').click();
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            document.getElementById('image-input').focus();
+                            break;
+                        case 'c':
+                            e.preventDefault();
+                            toggleHighContrast();
+                            break;
+                        case '+':
+                            e.preventDefault();
+                            increaseFontSize();
+                            break;
+                        case '-':
+                            e.preventDefault();
+                            decreaseFontSize();
+                            break;
+                    }
+                }
+            });
+            
+            // Load initial history
+            loadHistory();
+        });
+        
+        function addToHistory(speaker, message) {
+            const historyArea = document.getElementById('history-area');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'mb-2 p-2 border-start border-3 border-primary bg-light';
+            historyItem.innerHTML = `
+                <strong>${speaker}</strong> <small class="text-muted">${timestamp}</small>
+                <div>${message}</div>
+            `;
+            
+            // Remove the placeholder text if it exists
+            if (historyArea.querySelector('.text-muted')) {
+                historyArea.innerHTML = '';
+            }
+            
+            historyArea.appendChild(historyItem);
+            historyArea.scrollTop = historyArea.scrollHeight;
+        }
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                
+                if (data.success && data.history.length > 0) {
+                    const historyArea = document.getElementById('history-area');
+                    historyArea.innerHTML = '';
+                    
+                    data.history.forEach(item => {
+                        const speaker = item.type === 'user_input' ? 'You' : 'AI';
+                        const timestamp = new Date(item.timestamp).toLocaleTimeString();
+                        
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'mb-2 p-2 border-start border-3 border-primary bg-light';
+                        historyItem.innerHTML = `
+                            <strong>${speaker}</strong> <small class="text-muted">${timestamp}</small>
+                            <div>${item.content}</div>
+                        `;
+                        
+                        historyArea.appendChild(historyItem);
+                    });
+                    
+                    historyArea.scrollTop = historyArea.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+        
+        // Announce keyboard shortcuts on focus
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus("Welcome! Use Alt+1 for text input, Alt+2 for voice, Alt+3 for image upload, Alt+C for contrast, Alt+Plus/Minus for font size.");
+        });
+    </script>
+</body>
+</html>
